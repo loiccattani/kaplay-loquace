@@ -1,4 +1,12 @@
+// Dialog: Visual Novel dialog system for KAPLAY
+// This plugin allows you to create visual novel dialogues in your games.
+// Designed for developers familiar with Ren'Py or Monogatari
+// Usable as both a KAPLAY plugin and an ES6 module
+
 export {
+    dialog, // KAPLAY plugin
+
+    // Dialog functions for use as a module
     characters,
     script,
     start,
@@ -6,6 +14,20 @@ export {
     display,
     clear,
 }
+
+// Allow use of dialog as a KAPLAY plugin
+function dialog(k) {
+    return {
+        dialog: {
+            characters,
+            script,
+            start,
+            next,
+            display,
+            clear,
+        },
+    }
+};
 
 const _characters = {};
 const _script = {};
