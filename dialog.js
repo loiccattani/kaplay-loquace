@@ -16,7 +16,7 @@ export {
 }
 
 // Allow use of dialog as a KAPLAY plugin
-function dialog(k) {
+function dialog() {
     return {
         dialog: {
             characters,
