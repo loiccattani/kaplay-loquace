@@ -1,4 +1,5 @@
 // Dialog: Visual Novel dialog system for KAPLAY
+
 // This plugin allows you to create visual novel dialogues in your games.
 // Designed for developers familiar with Ren'Py or Monogatari
 // Usable as both a KAPLAY plugin and an ES6 module
@@ -69,8 +70,8 @@ function display(string) {
 
     // Parse string from `who:expression statement`
     // Example: `r:happy Hello, I'm a robot!`
-    let who = undefined;
-    let expression = undefined;
+    let who;
+    let expression;
     const match = string.match(/^(\w+):(\S+)\s/);
     if (match) {
         who = match[1];
@@ -109,11 +110,11 @@ function display(string) {
     }
     const sideImage = character?.expressions[expression];
 
-    const side = character?.position || 'topleft';
+    const position = character?.position || 'topleft';
 
     let xPos, yPos, startyPos;
 
-    switch (side) {
+    switch (position) {
         case 'topleft':
             xPos = 20;
             yPos = 20;
@@ -198,9 +199,9 @@ function display(string) {
 
     // Multiplier to offset yPos for text height
     let mult = 0;
-    if (side.includes('bot')) {
+    if (position.includes('bot')) {
         mult = 1;
-    } else if (side === 'left' || side === 'center' || side === 'right') {
+    } else if (position === 'left' || position === 'center' || position === 'right') {
         mult = 0.5;
     }
 
