@@ -110,6 +110,29 @@ function display(string) {
     }
     const sideImage = character?.expressions[expression];
 
+    // Display dialog by type
+    switch (character.dialogType) {
+        case 'pop': // Positionable dialog pop-up or pop-down
+            pop(string, character, sideImage);
+            break;
+        case 'vn': // Traditional visual novel dialog box at the bottom of the screen
+            vn(string, character, sideImage);
+            break;
+        default:
+            pop(string, character, sideImage);
+    }
+}
+
+function clear() {
+    get('dialogvn').forEach(o => {
+        tween(o.opacity, 0, 0.5, (v) => {
+            o.opacity = v;
+            o.children.forEach(c => c.opacity = v);
+        }, easings.easeOutQuad).onEnd(() => o.destroy());
+    });
+}
+
+function pop(string, character, sideImage) {
     const position = character?.position || 'topleft';
 
     let xPos, yPos, startyPos;
@@ -210,11 +233,39 @@ function display(string) {
     tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
 
-function clear() {
-    get('dialogvn').forEach(o => {
-        tween(o.opacity, 0, 0.5, (v) => {
-            o.opacity = v;
-            o.children.forEach(c => c.opacity = v);
-        }, easings.easeOutQuad).onEnd(() => o.destroy());
-    });
+function vn(string, character, sideImage) {
+    const textbox = add([
+        rect(width() - 2 * 20, 50, { radius: 15 }),
+        pos(20, height() + 50),
+        opacity(0),
+        'dialogvn',
+    ]);
+
+    if (sideImage) {
+        textbox.add([
+            sprite(sideImage),
+            pos(-15, -20),
+            scale(0.4),
+            opacity(1),
+        ]);
+    }
+
+    const dialog = textbox.add([
+        text(string, {
+            size: 20,
+            letterSpacing: 10,
+            lineSpacing: 10,
+            width: 370,
+        }),
+        color(0,0,0),
+        pos(60, 16),
+        opacity(1),
+    ]);
+
+    // Adjust textbox for dialog height
+    textbox.height = dialog.height + 30;
+
+    // Tween position and opacity
+    tween(textbox.pos.y, height() - 20 - textbox.height, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
+    tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
