@@ -54,6 +54,9 @@ function start(label, auto = true) {
 }
 
 function next() {
+    // Fail silently if no script for current label
+    if (!_script[curentLabel]) return;
+
     // Clear and return if no more statements
     if (statementCounter >= _script[curentLabel].length) {
         clear();
