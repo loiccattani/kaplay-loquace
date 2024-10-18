@@ -31,7 +31,7 @@ function dialog() {
 };
 
 const _characters = {};
-const _script = {};
+let _script = {};
 let statementCounter = 0;
 let curentLabel;
 
@@ -39,8 +39,12 @@ function characters(c) {
     Object.assign(_characters, c);
 }
 
-function script(s) {
-    Object.assign(_script, s);
+function script(s, replace = true) {
+    if (replace) {
+        _script = s;
+    } else {
+        Object.assign(_script, s);
+    }
 }
 
 function start(label, auto = true) {
