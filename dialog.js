@@ -244,37 +244,39 @@ function pop(string, character, sideImage) {
 
 function vn(string, character, sideImage) {
     const textbox = add([
-        rect(width() - 2 * 20, 50, { radius: 15 }),
-        pos(20, height() + 50),
+        rect(width() - 3 * 20 - 120, 50, { radius: 15 }),
+        pos(20 + 120 + 20, height() + 50),
         opacity(0),
         'dialogvn',
     ]);
 
+    let sideSprite;
     if (sideImage) {
-        textbox.add([
+        sideSprite = textbox.add([
             sprite(sideImage, {
-                width: 60,
-                height: 60,
+                width: 120,
+                height: 120,
             }),
-            pos(-15, -20),
+            pos(-140, -70),
             opacity(1),
         ]);
     }
 
-    const dialog = textbox.add([
+    const dialogText = textbox.add([
         text(string, {
             size: 20,
             letterSpacing: 10,
             lineSpacing: 10,
-            width: 370,
+            width: 600,
         }),
         color(0,0,0),
-        pos(60, 16),
+        pos(20, 16),
         opacity(1),
     ]);
 
-    // Adjust textbox for dialog height
-    textbox.height = dialog.height + 30;
+    // Adjust textbox for dialogText height
+    textbox.height = dialogText.height + 30;
+    sideSprite.pos.y = - 120 + textbox.height;
 
     // Tween position and opacity
     tween(textbox.pos.y, height() - 20 - textbox.height, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
