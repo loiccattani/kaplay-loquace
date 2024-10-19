@@ -205,9 +205,11 @@ function pop(string, character, sideImage) {
 
     if (sideImage) {
         textbox.add([
-            sprite(sideImage),
+            sprite(sideImage, {
+                width: 60,
+                height: 60,
+            }),
             pos(-15, -20),
-            scale(0.4),
             opacity(1),
         ]);
     }
@@ -250,9 +252,11 @@ function vn(string, character, sideImage) {
 
     if (sideImage) {
         textbox.add([
-            sprite(sideImage),
+            sprite(sideImage, {
+                width: 60,
+                height: 60,
+            }),
             pos(-15, -20),
-            scale(0.4),
             opacity(1),
         ]);
     }
