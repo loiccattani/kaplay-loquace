@@ -8,8 +8,10 @@ export {
     dialog, // KAPLAY plugin
 
     // Dialog functions for use as a module
+    init,
     characters,
     script,
+    registerCommand,
     start,
     next,
     display,
@@ -20,8 +22,10 @@ export {
 function dialog() {
     return {
         dialog: {
+            init,
             characters,
             script,
+            registerCommand,
             start,
             next,
             display,
@@ -35,6 +39,24 @@ let _script = {};
 let statementCounter = 0;
 let curentLabel;
 
+// Default configuration
+const config = {
+    showNextPrompt: true,
+};
+
+const registeredCommands = {
+    showNextPrompt: null, // Built-in command to display next prompt
+};
+
+// Default narrator character
+_characters.narrator = {
+    dialogType: 'vn',
+};
+
+function init(options) {
+    Object.assign(config, options);
+}
+
 function characters(c) {
     Object.assign(_characters, c);
 }
@@ -45,6 +67,10 @@ function script(s, replace = true) {
     } else {
         Object.assign(_script, s);
     }
+}
+
+function registerCommand(command, callback) {
+    registeredCommands[command] = callback;
 }
 
 function start(label, auto = true) {
@@ -74,6 +100,17 @@ function next() {
 function display(string) {
     // First remove any existing dialog
     clear();
+
+    let showNextPrompt = config.showNextPrompt;
+
+    // Identify, call and trim commands from the start of the string
+    let commandMatch;
+    while ((commandMatch = string.match(/^(\w+)/)) && Object.keys(registeredCommands).includes(commandMatch[1])) {
+        const command = commandMatch[1];
+        if (typeof registeredCommands[command] === 'function') registeredCommands[command]();
+        if (command === 'showNextPrompt') showNextPrompt = true;
+        string = string.replace(/^\w+\s*/, '');
+    }
 
     // Parse string from `who:expression statement`
     // Example: `r:happy Hello, I'm a robot!`
@@ -105,28 +142,29 @@ function display(string) {
         }
     }
 
-    // Get character data
-    if (who !== undefined && !_characters[who]) {
-        throw new Error(`Character "${who}" not found`);
+    // If still no match, consider the string as a narrator dialog
+    if (who === undefined) {
+        who = 'narrator';
     }
+
     const character = _characters[who];
 
     // Get expression for side image
     if (expression !== undefined && !character.expressions[expression]) {
         throw new Error(`Expression "${expression}" not found for character "${who}"`);
     }
-    const sideImage = character?.expressions[expression];
+    const sideImage = (expression) ? character.expressions[expression] : undefined;
 
     // Display dialog by type
     switch (character.dialogType) {
         case 'pop': // Positionable dialog pop-up or pop-down
-            pop(string, character, sideImage);
+            pop(string, character, sideImage, showNextPrompt);
             break;
         case 'vn': // Traditional visual novel dialog box at the bottom of the screen
-            vn(string, character, sideImage);
+            vn(string, character, sideImage, showNextPrompt);
             break;
         default:
-            pop(string, character, sideImage);
+            pop(string, character, sideImage, showNextPrompt);
     }
 }
 
@@ -139,7 +177,7 @@ function clear() {
     });
 }
 
-function pop(string, character, sideImage) {
+function pop(string, character, sideImage, showNextPrompt = config.showNextPrompt) {
     const position = character?.position || 'topleft';
 
     let xPos, yPos, startyPos;
@@ -242,10 +280,11 @@ function pop(string, character, sideImage) {
     tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
 
-function vn(string, character, sideImage) {
+function vn(string, character, sideImage, showNextPrompt = config.showNextPrompt) {
+    const sideImageOffset = (sideImage) ? 20 + 120 : 0;
     const textbox = add([
-        rect(width() - 3 * 20 - 120, 50, { radius: 15 }),
-        pos(20 + 120 + 20, height() + 50),
+        rect(width() - 2 * 20 - sideImageOffset, 50, { radius: 15 }),
+        pos(sideImageOffset + 20, height() + 50),
         opacity(0),
         'dialogvn',
     ]);
@@ -274,9 +313,23 @@ function vn(string, character, sideImage) {
         opacity(1),
     ]);
 
+    if (showNextPrompt) {
+        const nextPrompt = textbox.add([
+            sprite('right-arrow'),
+            pos(width() - 2 * 20 - sideImageOffset - 20 - 10, dialogText.height + 5),
+            anchor('center'),
+            opacity(1),
+            animate(),
+        ]);
+        nextPrompt.animate('scale', [vec2(1.2), vec2(1)], {
+            duration: 0.5,
+            direction: 'ping-pong',
+        });
+    }
+
     // Adjust textbox for dialogText height
     textbox.height = dialogText.height + 30;
-    sideSprite.pos.y = - 120 + textbox.height;
+    if (sideImage) sideSprite.pos.y = - 120 + textbox.height;
 
     // Tween position and opacity
     tween(textbox.pos.y, height() - 20 - textbox.height, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
