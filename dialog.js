@@ -112,6 +112,9 @@ function display(string) {
         string = string.replace(/^\w+\s*/, '');
     }
 
+    // Only process commands if string is empty after trimming
+    if (string === '') return;
+
     // Parse string from `who:expression statement`
     // Example: `r:happy Hello, I'm a robot!`
     let who;
