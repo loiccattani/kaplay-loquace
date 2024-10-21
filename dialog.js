@@ -8,6 +8,7 @@ export {
     dialog, // KAPLAY plugin
 
     // Dialog functions for use as a module
+    config,
     init,
     characters,
     script,
@@ -22,6 +23,7 @@ export {
 function dialog() {
     return {
         dialog: {
+            config,
             init,
             characters,
             script,
@@ -45,7 +47,9 @@ const config = {
 };
 
 const registeredCommands = {
-    showNextPrompt: null, // Built-in command to display next prompt
+    // Built-in commands, can be overloaded
+    enableNextPrompt: null, // Change showNextPrompt property to display next prompt
+    disableNextPrompt: null, // Change showNextPrompt property to hide next prompt
 };
 
 // Default narrator character
@@ -101,14 +105,19 @@ function display(string) {
     // First remove any existing dialog
     clear();
 
-    let showNextPrompt = config.showNextPrompt;
-
     // Identify, call and trim commands from the start of the string
     let commandMatch;
     while ((commandMatch = string.match(/^(\w+)/)) && Object.keys(registeredCommands).includes(commandMatch[1])) {
         const command = commandMatch[1];
+
+        // Call registered command
         if (typeof registeredCommands[command] === 'function') registeredCommands[command]();
-        if (command === 'showNextPrompt') showNextPrompt = true;
+
+        // Process built-in commands on top of function callbacks
+        if (command === 'enableNextPrompt') config.showNextPrompt = true;
+        if (command === 'disableNextPrompt') config.showNextPrompt = false;
+
+        // Trim command from string
         string = string.replace(/^\w+\s*/, '');
     }
 
@@ -161,13 +170,13 @@ function display(string) {
     // Display dialog by type
     switch (character.dialogType) {
         case 'pop': // Positionable dialog pop-up or pop-down
-            pop(string, character, sideImage, showNextPrompt);
+            pop(string, character, sideImage);
             break;
         case 'vn': // Traditional visual novel dialog box at the bottom of the screen
-            vn(string, character, sideImage, showNextPrompt);
+            vn(string, character, sideImage);
             break;
         default:
-            pop(string, character, sideImage, showNextPrompt);
+            pop(string, character, sideImage);
     }
 }
 
@@ -180,7 +189,7 @@ function clear() {
     });
 }
 
-function pop(string, character, sideImage, showNextPrompt = config.showNextPrompt) {
+function pop(string, character, sideImage) {
     const position = character?.position || 'topleft';
 
     let xPos, yPos, startyPos;
@@ -283,7 +292,7 @@ function pop(string, character, sideImage, showNextPrompt = config.showNextPromp
     tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
 
-function vn(string, character, sideImage, showNextPrompt = config.showNextPrompt) {
+function vn(string, character, sideImage) {
     const sideImageOffset = (sideImage) ? 20 + 120 : 0;
     const textbox = add([
         rect(width() - 2 * 20 - sideImageOffset, 50, { radius: 15 }),
@@ -316,7 +325,7 @@ function vn(string, character, sideImage, showNextPrompt = config.showNextPrompt
         opacity(1),
     ]);
 
-    if (showNextPrompt) {
+    if (config.showNextPrompt) {
         const nextPrompt = textbox.add([
             sprite('right-arrow'),
             pos(width() - 2 * 20 - sideImageOffset - 20 - 10, dialogText.height + 5),
