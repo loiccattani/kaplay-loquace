@@ -67,7 +67,7 @@ function characters(c) {
 
 function script(s) {
     // TODO: Document this in README
-    // → If an object is passed, the bahavior is like Monogatari:
+    // → If an object is passed, the behavior is like Monogatari:
     // The object passed is a 'script' which is a list of keys ('labels'),
     // containing an array of strings ('statements'). 
     // → If an array is passed, it is a list of strings (or 'statements') for
@@ -95,12 +95,14 @@ function registerCommand(command, callback) {
     registeredCommands[command] = callback;
 }
 
+// Start dialog from a label
 function start(label, auto = true) {
     statements = _script[label];
     statementCounter = 0;
     if (auto) next();
 }
 
+// Display next statement
 function next() {
     // Fail silently if no script for current label
     if (!statements) return;
@@ -118,13 +120,39 @@ function next() {
     statementCounter++;
 }
 
-function display(string) {
+// Display dialog from a statement, array of statements or object for interactive dialog
+function display(line) {
     // First remove any existing dialog
     clear();
+    
+    let statement;
+    if (Array.isArray(line)) {
+        // Allow for an Array of strings to be chosen randomly
+        statement = choose(line);
+    } else if (typeof line === 'object') {
+        // Allow for Objects to be passed for interactive dialogs
+        /* Example:
+        {
+            type: 'multipleChoice', // What other types ?
+            statement: "t What choice? [button=choiceA]something[/button] [button=choiceB]something else[/button]",
+            onPress: {
+                'choiceA': () => {
+                    // Do something
+                },
+                'choiceB': () => {
+                    // Do something
+                },
+            }
+        */
+        statement = line.statement; // TODO: Augment this with above example
+    } else {
+        // Default to statement as a String
+        statement = line;
+    }
 
     // Identify, call and trim commands from the start of the string
     let commandMatch;
-    while ((commandMatch = string.match(/^(\w+)/)) && Object.keys(registeredCommands).includes(commandMatch[1])) {
+    while ((commandMatch = statement.match(/^(\w+)/)) && Object.keys(registeredCommands).includes(commandMatch[1])) {
         const command = commandMatch[1];
 
         // Call registered command
@@ -134,22 +162,22 @@ function display(string) {
         if (command === 'enableNextPrompt') config.showNextPrompt = true;
         if (command === 'disableNextPrompt') config.showNextPrompt = false;
 
-        // Trim command from string
-        string = string.replace(/^\w+\s*/, '');
+        // Trim command from statement
+        statement = statement.replace(/^\w+\s*/, '');
     }
 
-    // Only process commands if string is empty after trimming
-    if (string === '') return;
+    // Only process commands if statement is empty after trimming
+    if (statement === '') return;
 
-    // Parse string from `who:expression statement`
+    // Parse statement from `who:expression string`
     // Example: `r:happy Hello, I'm a robot!`
     let who;
     let expression;
-    const match = string.match(/^(\w+):(\S+)\s/);
+    const match = statement.match(/^(\w+):(\S+)\s/);
     if (match) {
         who = match[1];
         expression = match[2];
-        string = string.replace(/^(\w+):(\S+)\s*/, '');
+        statement = statement.replace(/^(\w+):(\S+)\s*/, '');
     }
 
     // If no match :
@@ -157,7 +185,7 @@ function display(string) {
     // In example: `r Hello, I'm a robot!`
     if (who === undefined) {
         for (const key in _characters) {
-            if (string.startsWith(key + ' ')) {
+            if (statement.startsWith(key + ' ')) {
                 who = key;
 
                 // Set default expression if its defined
@@ -165,13 +193,13 @@ function display(string) {
                     expression = _characters[who].defaultExpression;
                 }
 
-                string = string.replace(key + ' ', '');
+                statement = statement.replace(key + ' ', '');
                 break;
             }
         }
     }
 
-    // If still no match, consider the string as a narrator dialog
+    // If still no match, consider the statement as a narrator dialog
     if (who === undefined) {
         who = 'narrator';
     }
@@ -187,13 +215,13 @@ function display(string) {
     // Display dialog by type
     switch (character.dialogType) {
         case 'pop': // Positionable dialog pop-up or pop-down
-            pop(string, character, sideImage);
+            pop(statement, character, sideImage);
             break;
         case 'vn': // Traditional visual novel dialog box at the bottom of the screen
-            vn(string, character, sideImage);
+            vn(statement, character, sideImage);
             break;
         default:
-            pop(string, character, sideImage);
+            pop(statement, character, sideImage);
     }
 }
 
@@ -206,7 +234,7 @@ function clear() {
     });
 }
 
-function pop(string, character, sideImage) {
+function pop(statement, character, sideImage) {
     const position = character?.position || 'topleft';
 
     let xPos, yPos, startyPos;
@@ -282,7 +310,7 @@ function pop(string, character, sideImage) {
     }
 
     const dialog = textbox.add([
-        text(string, {
+        text(statement, {
             size: 20,
             letterSpacing: 10,
             lineSpacing: 10,
@@ -309,7 +337,7 @@ function pop(string, character, sideImage) {
     tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
 
-function vn(string, character, sideImage) {
+function vn(statement, character, sideImage) {
     const sideImageOffset = (sideImage) ? 20 + 120 : 0;
     const textbox = add([
         rect(width() - 2 * 20 - sideImageOffset, 50, { radius: 15 }),
@@ -331,7 +359,7 @@ function vn(string, character, sideImage) {
     }
 
     const dialogText = textbox.add([
-        text(string, {
+        text(statement, {
             size: 20,
             letterSpacing: 10,
             lineSpacing: 10,
