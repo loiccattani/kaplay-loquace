@@ -65,7 +65,7 @@ function characters(c) {
     Object.assign(_characters, c);
 }
 
-function script(s) {
+function script(s, auto = true) {
     // TODO: Document this in README
     // → If an object is passed, the behavior is like Monogatari:
     // The object passed is a 'script' which is a list of keys ('labels'),
@@ -85,6 +85,8 @@ function script(s) {
 
         // Reset statement counter
         statementCounter = 0;
+
+        if (auto) next();
     } else {
         // Merge new script with existing script
         Object.assign(_script, s);
@@ -96,10 +98,9 @@ function registerCommand(command, callback) {
 }
 
 // Start dialog from a label
-function start(label, auto = true) {
+function start(label) {
     statements = _script[label];
     statementCounter = 0;
-    if (auto) next();
 }
 
 // Display next statement
