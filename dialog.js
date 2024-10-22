@@ -127,7 +127,7 @@ function display(line) {
     
     let statement;
     if (Array.isArray(line)) {
-        // Allow for an Array of strings to be chosen randomly
+        // Allow for an Array of statements to be chosen randomly
         statement = choose(line);
     } else if (typeof line === 'object') {
         // Allow for Objects to be passed for interactive dialogs
@@ -214,13 +214,12 @@ function display(line) {
 
     // Display dialog by type
     switch (character.dialogType) {
-        case 'pop': // Positionable dialog pop-up or pop-down
-            pop(statement, character, sideImage);
-            break;
-        case 'vn': // Traditional visual novel dialog box at the bottom of the screen
+        case 'vn':
+            // Traditional visual novel dialog box at the bottom of the screen
             vn(statement, character, sideImage);
             break;
         default:
+            // Positionable dialog pop-up or pop-down
             pop(statement, character, sideImage);
     }
 }
@@ -239,6 +238,7 @@ function pop(statement, character, sideImage) {
 
     let xPos, yPos, startyPos;
 
+    // FIXME: Convert hardcoded values to configurable variables
     switch (position) {
         case 'topleft':
             xPos = 20;
@@ -338,6 +338,7 @@ function pop(statement, character, sideImage) {
 }
 
 function vn(statement, character, sideImage) {
+    // FIXME: Convert hardcoded values to configurable variables
     const sideImageOffset = (sideImage) ? 20 + 120 : 0;
     const textbox = add([
         rect(width() - 2 * 20 - sideImageOffset, 50, { radius: 15 }),
@@ -363,7 +364,7 @@ function vn(statement, character, sideImage) {
             size: 20,
             letterSpacing: 10,
             lineSpacing: 10,
-            width: 600,
+            width: 600, // FIXME: Make this dynamically calculated from width()
         }),
         color(0,0,0),
         pos(20, 16),
