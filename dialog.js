@@ -38,8 +38,8 @@ function dialog() {
 
 const _characters = {};
 let _script = {};
+let statements;
 let statementCounter = 0;
-let curentLabel;
 
 // Default configuration
 const config = {
@@ -65,10 +65,28 @@ function characters(c) {
     Object.assign(_characters, c);
 }
 
-function script(s, replace = true) {
-    if (replace) {
-        _script = s;
+function script(s) {
+    // TODO: Document this in README
+    // → If an object is passed, the bahavior is like Monogatari:
+    // The object passed is a 'script' which is a list of keys ('labels'),
+    // containing an array of strings ('statements'). 
+    // → If an array is passed, it is a list of strings (or 'statements') for
+    // immediate use. There is no 'label' concept in this case.
+
+    // Both modes are compatible with each other. For example, you can provide
+    // a Monogatari-like script with labels. Start with a label, jump to
+    // another, as usual. You can call script() again to overwrite existing
+    // labels or add new ones. *And* you can call script() with an array of
+    // strings to use those as the new current (ephemeral and orphan) label.
+
+    if (Array.isArray(s)) {
+        // Set statements for immediate use
+        statements = s;
+
+        // Reset statement counter
+        statementCounter = 0;
     } else {
+        // Merge new script with existing script
         Object.assign(_script, s);
     }
 }
@@ -78,27 +96,26 @@ function registerCommand(command, callback) {
 }
 
 function start(label, auto = true) {
-    curentLabel = label;
+    statements = _script[label];
     statementCounter = 0;
     if (auto) next();
 }
 
 function next() {
     // Fail silently if no script for current label
-    if (!_script[curentLabel]) return;
+    if (!statements) return;
 
     // Clear and return if no more statements
-    if (statementCounter >= _script[curentLabel].length) {
+    if (statementCounter > statements.length - 1) {
         clear();
         return;
     };
 
     // Display next statement
-    const strings = _script[curentLabel];
-    display(strings[statementCounter]);
+    display(statements[statementCounter]);
 
     // Increment statement counter for next iteration
-    if (statementCounter < strings.length - 1) statementCounter++;
+    statementCounter++;
 }
 
 function display(string) {
