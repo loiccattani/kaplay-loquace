@@ -15,7 +15,7 @@ export {
     registerCommand,
     start,
     next,
-    processStatement,
+    parse,
     clear,
 }
 
@@ -30,7 +30,7 @@ function dialog() {
             registerCommand,
             start,
             next,
-            processStatement,
+            parse,
             clear,
         },
     }
@@ -118,7 +118,7 @@ function next() {
     clear();
 
     // Parse statement
-    const dialogObject = processStatement(statements[statementCounter], false)
+    const dialogObject = parse(statements[statementCounter], false)
 
     // Increment statement counter for next iteration
     statementCounter++;
@@ -128,8 +128,8 @@ function next() {
     displayDialog(dialogObject);
 }
 
-// Process a statement and return a dialog object
-function processStatement(statement, execute = true) {
+// Parse a statement and return a dialog object
+function parse(statement, execute = true) {
     const dialogObject = {
         originalStatement: statement,
         statement: '',
@@ -138,7 +138,7 @@ function processStatement(statement, execute = true) {
 
     preSelectStatement(dialogObject)
     parseCommands(dialogObject);
-    parseStatement(dialogObject);
+    parseDialog(dialogObject);
 
     if (execute) {
         executeCommands(dialogObject);
@@ -195,8 +195,8 @@ function parseCommands(dialogObject) {
     }
 }
 
-// Parse rest of statement from dialogObject.statement: `who:expression string`
-function parseStatement(dialogObject) {
+// Parse dialog from dialogObject.statement: `who:expression string`
+function parseDialog(dialogObject) {
     // Do not try to parse an empty statement (e.g. if it was only a command)
     if (dialogObject.statement === '') return;
 
