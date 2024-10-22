@@ -15,7 +15,7 @@ export {
     registerCommand,
     start,
     next,
-    display,
+    processStatement,
     clear,
 }
 
@@ -30,7 +30,7 @@ function dialog() {
             registerCommand,
             start,
             next,
-            display,
+            processStatement,
             clear,
         },
     }
@@ -47,7 +47,7 @@ const config = {
 };
 
 const registeredCommands = {
-    // Built-in commands, can be overloaded
+    // Built-in commands (can be overloaded)
     enableNextPrompt: null, // Change showNextPrompt property to display next prompt
     disableNextPrompt: null, // Change showNextPrompt property to hide next prompt
 };
@@ -113,23 +113,47 @@ function next() {
         return;
     };
 
-    // Display next statement
-    display(statements[statementCounter]);
+    // First remove any existing dialog
+    clear();
+
+    // Parse statement
+    const dialogObject = processStatement(statements[statementCounter], false)
 
     // Increment statement counter for next iteration
     statementCounter++;
+
+    // Execute and display dialog (deferred after statementCounter increment)
+    executeCommands(dialogObject.commands);
+    displayDialog(dialogObject);
 }
 
-// Display dialog from a statement, array of statements or object for interactive dialog
-function display(line) {
-    // First remove any existing dialog
-    clear();
-    
-    let statement;
-    if (Array.isArray(line)) {
+function processStatement(statement, execute = true) {
+    const dialogObject = {
+        originalStatement: statement,
+        statement: '',
+        commands: [],
+    };
+
+    preSelectStatement(dialogObject)
+    parseCommands(dialogObject);
+    parseStatement(dialogObject);
+
+    if (execute) {
+        executeCommands(dialogObject);
+        displayDialog(dialogObject);
+    }
+
+    return dialogObject;
+}
+
+function preSelectStatement(dialogObject) {
+    const statement = dialogObject.originalStatement;
+
+    // Identify the statement type
+    if (Array.isArray(statement)) {
         // Allow for an Array of statements to be chosen randomly
-        statement = choose(line);
-    } else if (typeof line === 'object') {
+        dialogObject.statement = choose(statement);
+    } else if (typeof statement === 'object') {
         // Allow for Objects to be passed for interactive dialogs
         /* Example:
         {
@@ -144,83 +168,99 @@ function display(line) {
                 },
             }
         */
-        statement = line.statement; // TODO: Augment this with above example
+            dialogObject.statement = statement.statement; // TODO: Temporary. Augment this with above example
     } else {
         // Default to statement as a String
-        statement = line;
+        dialogObject.statement = statement;
     }
 
-    // Identify, call and trim commands from the start of the string
+    return dialogObject;
+}
+
+function parseCommands(dialogObject) {
+    // Identify, collect and trim commands from the start of the statement
     let commandMatch;
-    while ((commandMatch = statement.match(/^(\w+)/)) && Object.keys(registeredCommands).includes(commandMatch[1])) {
-        const command = commandMatch[1];
+    while ((commandMatch = dialogObject.statement.match(/^(\w+)/)) && Object.keys(registeredCommands).includes(commandMatch[1])) {
+        // This loop will run as long as the first word of the statement is a registered command
+        
+        // Collect commands for deferred execution
+        dialogObject.commands.push(commandMatch[1]);
 
-        // Call registered command
-        if (typeof registeredCommands[command] === 'function') registeredCommands[command]();
-
-        // Process built-in commands on top of function callbacks
-        if (command === 'enableNextPrompt') config.showNextPrompt = true;
-        if (command === 'disableNextPrompt') config.showNextPrompt = false;
-
-        // Trim command from statement
-        statement = statement.replace(/^\w+\s*/, '');
+        // Trim command from dialogObject.statement
+        dialogObject.statement = dialogObject.statement.replace(/^\w+\s*/, '');
     }
+}
 
-    // Only process commands if statement is empty after trimming
-    if (statement === '') return;
+function parseStatement(dialogObject) {
+    // Do not try to parse an empty statement (e.g. if it was only a command)
+    if (dialogObject.statement === '') return;
 
-    // Parse statement from `who:expression string`
+    // Parse dialogObject.statement from `who:expression string`
     // Example: `r:happy Hello, I'm a robot!`
-    let who;
-    let expression;
-    const match = statement.match(/^(\w+):(\S+)\s/);
+    const match = dialogObject.statement.match(/^(\w+):(\S+)\s/);
     if (match) {
-        who = match[1];
-        expression = match[2];
-        statement = statement.replace(/^(\w+):(\S+)\s*/, '');
+        dialogObject.who = match[1];
+        dialogObject.expression = match[2];
+        dialogObject.statement = dialogObject.statement.replace(/^(\w+):(\S+)\s*/, '');
     }
 
     // If no match :
     // Look if the first word match a character
     // In example: `r Hello, I'm a robot!`
-    if (who === undefined) {
+    if (dialogObject.who === undefined) {
         for (const key in _characters) {
-            if (statement.startsWith(key + ' ')) {
-                who = key;
+            if (dialogObject.statement.startsWith(key + ' ')) {
+                dialogObject.who = key;
 
                 // Set default expression if its defined
-                if (_characters[who].defaultExpression) {
-                    expression = _characters[who].defaultExpression;
+                if (_characters[dialogObject.who].defaultExpression) {
+                    dialogObject.expression = _characters[dialogObject.who].defaultExpression;
                 }
 
-                statement = statement.replace(key + ' ', '');
+                dialogObject.statement = dialogObject.statement.replace(key + ' ', '');
                 break;
             }
         }
     }
 
-    // If still no match, consider the statement as a narrator dialog
-    if (who === undefined) {
-        who = 'narrator';
+    // If still no match, consider the dialogObject.statement as a narrator dialog
+    if (dialogObject.who === undefined) {
+        dialogObject.who = 'narrator';
     }
-
-    const character = _characters[who];
 
     // Get expression for side image
-    if (expression !== undefined && !character.expressions[expression]) {
-        throw new Error(`Expression "${expression}" not found for character "${who}"`);
+    if (dialogObject.expression !== undefined && !_characters[dialogObject.who].expressions[dialogObject.expression]) {
+        throw new Error(`Expression "${dialogObject.expression}" not found for character "${dialogObject.who}"`);
     }
-    const sideImage = (expression) ? character.expressions[expression] : undefined;
+    dialogObject.sideImage = (dialogObject.expression) ? _characters[dialogObject.who].expressions[dialogObject.expression] : undefined;
+}
+
+function executeCommands(commands) {
+    // Process registered commands
+    // Loop through commands and execute them
+    commands.forEach(command => {
+        if (typeof registeredCommands[command] === 'function') registeredCommands[command]();
+
+        // Process built-in commands on top of registered commands
+        if (command === 'enableNextPrompt') config.showNextPrompt = true;
+        if (command === 'disableNextPrompt') config.showNextPrompt = false;
+    });
+}
+
+// Display dialog from a statement, array of statements or object for interactive dialog
+function displayDialog(dialogObject) {
+    // Do not display anything if statement is empty (e.g. if it was only a command)
+    if (dialogObject.statement === '') return;
 
     // Display dialog by type
-    switch (character.dialogType) {
+    switch (_characters[dialogObject.who].dialogType) {
         case 'vn':
             // Traditional visual novel dialog box at the bottom of the screen
-            vn(statement, character, sideImage);
+            vn(dialogObject.statement, _characters[dialogObject.who], dialogObject.sideImage);
             break;
         default:
             // Positionable dialog pop-up or pop-down
-            pop(statement, character, sideImage);
+            pop(dialogObject.statement, _characters[dialogObject.who], dialogObject.sideImage);
     }
 }
 
@@ -233,7 +273,7 @@ function clear() {
     });
 }
 
-function pop(statement, character, sideImage) {
+function pop(string, character, sideImage) {
     const position = character?.position || 'topleft';
 
     let xPos, yPos, startyPos;
@@ -310,7 +350,7 @@ function pop(statement, character, sideImage) {
     }
 
     const dialog = textbox.add([
-        text(statement, {
+        text(string, {
             size: 20,
             letterSpacing: 10,
             lineSpacing: 10,
@@ -337,7 +377,7 @@ function pop(statement, character, sideImage) {
     tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
 
-function vn(statement, character, sideImage) {
+function vn(string, character, sideImage) {
     // FIXME: Convert hardcoded values to configurable variables
     const sideImageOffset = (sideImage) ? 20 + 120 : 0;
     const textbox = add([
@@ -360,7 +400,7 @@ function vn(statement, character, sideImage) {
     }
 
     const dialogText = textbox.add([
-        text(statement, {
+        text(string, {
             size: 20,
             letterSpacing: 10,
             lineSpacing: 10,
