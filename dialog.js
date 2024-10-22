@@ -127,6 +127,7 @@ function next() {
     displayDialog(dialogObject);
 }
 
+// Process a statement and return a dialog object
 function processStatement(statement, execute = true) {
     const dialogObject = {
         originalStatement: statement,
@@ -146,6 +147,7 @@ function processStatement(statement, execute = true) {
     return dialogObject;
 }
 
+// Pre-select statement from different types (can be a String, Array or Object)
 function preSelectStatement(dialogObject) {
     const statement = dialogObject.originalStatement;
 
@@ -168,7 +170,7 @@ function preSelectStatement(dialogObject) {
                 },
             }
         */
-            dialogObject.statement = statement.statement; // TODO: Temporary. Augment this with above example
+        dialogObject.statement = statement.statement; // TODO: Temporary. Augment this with above example
     } else {
         // Default to statement as a String
         dialogObject.statement = statement;
@@ -177,6 +179,7 @@ function preSelectStatement(dialogObject) {
     return dialogObject;
 }
 
+// Parse commands from dialogObject.statement: `command1 command2 who:expression string`
 function parseCommands(dialogObject) {
     // Identify, collect and trim commands from the start of the statement
     let commandMatch;
@@ -191,6 +194,7 @@ function parseCommands(dialogObject) {
     }
 }
 
+// Parse rest of statement from dialogObject.statement: `who:expression string`
 function parseStatement(dialogObject) {
     // Do not try to parse an empty statement (e.g. if it was only a command)
     if (dialogObject.statement === '') return;
@@ -236,7 +240,6 @@ function parseStatement(dialogObject) {
 }
 
 function executeCommands(commands) {
-    // Process registered commands
     // Loop through commands and execute them
     commands.forEach(command => {
         if (typeof registeredCommands[command] === 'function') registeredCommands[command]();
@@ -247,7 +250,6 @@ function executeCommands(commands) {
     });
 }
 
-// Display dialog from a statement, array of statements or object for interactive dialog
 function displayDialog(dialogObject) {
     // Do not display anything if statement is empty (e.g. if it was only a command)
     if (dialogObject.statement === '') return;
