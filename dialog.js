@@ -1,4 +1,4 @@
-// Dialog: Visual Novel dialog system for KAPLAY
+// loquace.js: A Visual Novel and Interactive Fiction dialog system for KAPLAY
 
 // This plugin allows you to create visual novel dialogues in your games.
 // Designed for developers familiar with Ren'Py or Monogatari
