@@ -17,6 +17,8 @@ export {
     next,
     parse,
     clear,
+    pop,
+    vn,
 }
 
 // Allow use of dialog as a KAPLAY plugin
@@ -32,6 +34,8 @@ function dialog() {
             next,
             parse,
             clear,
+            pop,
+            vn,
         },
     }
 };
@@ -259,11 +263,18 @@ function displayDialog(dialogObject) {
     switch (_characters[dialogObject.who].dialogType) {
         case 'vn':
             // Traditional visual novel dialog box at the bottom of the screen
-            vn(dialogObject.statement, _characters[dialogObject.who], dialogObject.sideImage);
+            vn(dialogObject.statement, {
+                name: _characters[dialogObject.who].name,
+                sideImage: dialogObject.sideImage,
+            });
             break;
         default:
             // Positionable dialog pop-up or pop-down
-            pop(dialogObject.statement, _characters[dialogObject.who], dialogObject.sideImage);
+            pop(dialogObject.statement, {
+                name: _characters[dialogObject.who].name,
+                position: _characters[dialogObject.who].position,
+                sideImage: dialogObject.sideImage,
+            });
     }
 }
 
@@ -276,8 +287,8 @@ function clear() {
     });
 }
 
-function pop(string, character, sideImage) {
-    const position = character?.position || 'topleft';
+function pop(string, options = {}) {
+    const position = options.position || 'topleft';
 
     let xPos, yPos, startyPos;
 
@@ -341,11 +352,10 @@ function pop(string, character, sideImage) {
         'dialogvn',
     ]);
 
-    if (sideImage) {
+    if (options.sideImage) {
         textbox.add([
-            sprite(sideImage, {
+            sprite(options.sideImage, {
                 width: 60,
-                height: 60,
             }),
             pos(-15, -20),
             opacity(1),
@@ -380,59 +390,94 @@ function pop(string, character, sideImage) {
     tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
 }
 
-function vn(string, character, sideImage) {
-    // FIXME: Convert hardcoded values to configurable variables
-    const sideImageOffset = (sideImage) ? 20 + 120 : 0;
+function vn(string, options = {}) {
+    const margin = options.margin || 20;
+    const sideImageSize = options.sideImageSize || 120;
+    const sideImageOffset = (options.sideImage) ? margin + sideImageSize : 0;
+    const borderRadius = options.borderRadius || 15;
+    const textColor = options.textColor || [0,0,0];
+    const textOffsetX = options.textOffsetX || 1;
+    const doTween = options.doTween || true;
+
+    const padding = {
+        top: 15,
+        right: 20,
+        bottom: 15,
+        left: 20,
+    }
+    Object.assign(padding, options.padding);
+
+    const nextPrompt = {
+        image: 'right-arrow',
+        size: 20,
+        // TODO: What if the image is not of the same size as the text?
+        // TODO: What if the user wants a different padding for the nextPrompt?
+        // TODO: What if the user wants to align the nextPrompt to the top or center of the textbox ?
+    }
+    Object.assign(nextPrompt, options.nextPrompt);
+
+    const textOpts = {
+        size: 20,
+        letterSpacing: 10,
+        lineSpacing: 10,
+        width: width() - 2 * margin - padding.left - padding.right - sideImageOffset - nextPrompt.size - padding.right,
+    }
+    Object.assign(textOpts, options.text);
+
+    console.log(textOpts.width)
+
+    const textboxHeight = textOpts.size + padding.top + padding.bottom;
+
     const textbox = add([
-        rect(width() - 2 * 20 - sideImageOffset, 50, { radius: 15 }),
-        pos(sideImageOffset + 20, height() + 50),
-        opacity(0),
+        rect(width() - 2 * margin - sideImageOffset, textboxHeight, { radius: borderRadius }),
+        pos(sideImageOffset + margin, (doTween) ? height() + textboxHeight : height() - margin - textboxHeight),
+        opacity((doTween) ? 0 : 1),
         'dialogvn',
     ]);
 
     let sideSprite;
-    if (sideImage) {
+    if (options.sideImage) {
         sideSprite = textbox.add([
-            sprite(sideImage, {
-                width: 120,
-                height: 120,
+            sprite(options.sideImage, {
+                width: sideImageSize,
             }),
-            pos(-140, -70),
+            pos(-sideImageSize - margin, -sideImageSize + textboxHeight),
             opacity(1),
         ]);
     }
 
     const dialogText = textbox.add([
-        text(string, {
-            size: 20,
-            letterSpacing: 10,
-            lineSpacing: 10,
-            width: 600, // FIXME: Make this dynamically calculated from width()
-        }),
-        color(0,0,0),
-        pos(20, 16),
+        text(string, textOpts),
+        color(textColor),
+        pos(padding.left, padding.top + textOffsetX),
         opacity(1),
     ]);
 
+    // Adjust textbox for dialogText height
+    textbox.height = dialogText.height + padding.top + padding.bottom;
+    if (options.sideImage) sideSprite.pos.y = - sideImageSize + textbox.height;
+
     if (config.showNextPrompt) {
-        const nextPrompt = textbox.add([
-            sprite('right-arrow'),
-            pos(width() - 2 * 20 - sideImageOffset - 20 - 10, dialogText.height + 5),
+        const nextPromptSprite = textbox.add([
+            sprite(nextPrompt.image),
+            pos(width() - 2 * margin - sideImageOffset - padding.right - nextPrompt.size/2, textbox.height - padding.bottom - nextPrompt.size/2),
             anchor('center'),
             opacity(1),
             animate(),
         ]);
-        nextPrompt.animate('scale', [vec2(1.2), vec2(1)], {
+        nextPromptSprite.animate('scale', [vec2(1.2), vec2(1)], {
             duration: 0.5,
             direction: 'ping-pong',
         });
     }
 
-    // Adjust textbox for dialogText height
-    textbox.height = dialogText.height + 30;
-    if (sideImage) sideSprite.pos.y = - 120 + textbox.height;
+    if (doTween) {
+        // Tween position and opacity
+        tween(textbox.pos.y, height() - margin - textbox.height, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
+        tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
+    } else {
+        textbox.pos.y = height() - margin - textbox.height;
+    }
 
-    // Tween position and opacity
-    tween(textbox.pos.y, height() - 20 - textbox.height, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
-    tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
+    return textbox; // Allow for further manipulation and/or custom tweening
 }
