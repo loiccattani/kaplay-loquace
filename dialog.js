@@ -298,7 +298,9 @@ function pop(string, options = {}) {
         bottom: 15,
         left: 20,
     }, options.padding);
-    const borderRadius = options.borderRadius || 15;
+    const textBoxOpts = Object.assign({
+        radius: 15,
+    }, options.textBoxRectOpts); // FIXME: Meh, that's a mouthful
 
     // Side image options
     const sideImageSize = options.sideImageSize || 60;
@@ -381,7 +383,7 @@ function pop(string, options = {}) {
     }
 
     const textbox = add([
-        rect(textboxWidth, baseTextboxHeight, { radius: borderRadius }),
+        rect(textboxWidth, baseTextboxHeight, textBoxOpts),
         pos(xPos, startyPos),
         opacity((doTween) ? 0 : 1),
         'dialogvn',
@@ -437,6 +439,8 @@ function pop(string, options = {}) {
     } else {
         textbox.pos.y = yPos - textbox.height * mult;
     }
+
+    return textbox; // Allow for further manipulation and/or custom tweening
 }
 
 function vn(string, options = {}) {
@@ -448,7 +452,9 @@ function vn(string, options = {}) {
         bottom: 15,
         left: 20,
     }, options.padding);
-    const borderRadius = options.borderRadius || 15;
+    const textBoxOpts = Object.assign({
+        radius: 15,
+    }, options.textBoxRectOpts);
 
     // Side image options
     const sideImageSize = options.sideImageSize || 120;
@@ -479,7 +485,7 @@ function vn(string, options = {}) {
 
     // Add objects to the scene
     const textbox = add([
-        rect(width() - 2 * margin - sideImageOffset, baseTextboxHeight, { radius: borderRadius }),
+        rect(width() - 2 * margin - sideImageOffset, baseTextboxHeight, textBoxOpts),
         pos(sideImageOffset + margin, (doTween) ? height() + baseTextboxHeight : height() - margin - baseTextboxHeight),
         opacity((doTween) ? 0 : 1),
         'dialogvn',
