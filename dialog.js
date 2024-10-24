@@ -319,7 +319,7 @@ function pop(string, options = {}) {
         size: 20,
         letterSpacing: 10,
         lineSpacing: 10,
-        width: textboxWidth - sideImageSize - padding.right - nextPrompt.size - padding.right,
+        width: textboxWidth - sideImageSize - padding.right - ((config.showNextPrompt) ? nextPrompt.size + padding.right : 0),
     }, options.text);
     const baseTextboxHeight = textOpts.size + padding.top + padding.bottom;
 
@@ -470,7 +470,7 @@ function vn(string, options = {}) {
         size: 20,
         letterSpacing: 10,
         lineSpacing: 10,
-        width: width() - 2 * margin - padding.left - padding.right - sideImageOffset - nextPrompt.size - padding.right,
+        width: width() - 2 * margin - padding.left - padding.right - sideImageOffset - ((config.showNextPrompt) ? nextPrompt.size + padding.right : 0),
     }, options.text);
     const baseTextboxHeight = textOpts.size + padding.top + padding.bottom;
 
