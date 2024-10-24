@@ -288,94 +288,139 @@ function clear() {
 }
 
 function pop(string, options = {}) {
+    // Textbox options
     const position = options.position || 'topleft';
+    const textboxWidth = options.width || 450;
+    const margin = options.margin || 20;
+    const padding = Object.assign({
+        top: 15,
+        right: 20,
+        bottom: 15,
+        left: 20,
+    }, options.padding);
+    const borderRadius = options.borderRadius || 15;
+
+    // Side image options
+    const sideImageSize = options.sideImageSize || 60;
+
+    // Next prompt options
+    const nextPrompt = Object.assign({
+        image: 'right-arrow',
+        size: 20,
+        // TODO: What if the image is not of the same size as the text?
+        // TODO: What if the user wants a different padding for the nextPrompt?
+        // TODO: What if the user wants to align the nextPrompt to the top or center of the textbox ?
+    }, options.nextPrompt);
+
+    // Text options
+    const textColor = options.textColor || [0,0,0];
+    const textOffsetX = options.textOffsetX || 1;
+    const textOpts = Object.assign({
+        size: 20,
+        letterSpacing: 10,
+        lineSpacing: 10,
+        width: textboxWidth - sideImageSize - padding.right - nextPrompt.size - padding.right,
+    }, options.text);
+    const baseTextboxHeight = textOpts.size + padding.top + padding.bottom;
+
+    // Tween options
+    const doTween = options.doTween || true;
 
     let xPos, yPos, startyPos;
 
-    // FIXME: Convert hardcoded values to configurable variables
     switch (position) {
         case 'topleft':
-            xPos = 20;
-            yPos = 20;
-            startyPos = -50;
+            xPos = margin;
+            yPos = margin;
+            startyPos = -baseTextboxHeight;
             break;
         case 'top':
-            xPos = (width() - 450) / 2;
-            yPos = 20;
-            startyPos = -50;
+            xPos = (width() - textboxWidth) / 2;
+            yPos = margin;
+            startyPos = -baseTextboxHeight;
             break;
         case 'topright':
-            xPos = width() - 470;
-            yPos = 20;
-            startyPos = -50;
+            xPos = width() - textboxWidth - margin;
+            yPos = margin;
+            startyPos = -baseTextboxHeight;
             break;
         case 'left':
-            xPos = 20;
+            xPos = margin;
             yPos = height() / 2;
             startyPos = yPos;
             break;
         case 'center':
-            xPos = (width() - 450) / 2;
+            xPos = (width() - textboxWidth) / 2;
             yPos = height() / 2;
             startyPos = yPos;
             break;
         case 'right':
-            xPos = width() - 470;
+            xPos = width() - textboxWidth - margin;
             yPos = height() / 2;
             startyPos = yPos;
             break;
         case 'botleft':
-            xPos = 20;
-            yPos = height() - 20;
-            startyPos = height() + 50;
+            xPos = margin;
+            yPos = height() - margin;
+            startyPos = height() + baseTextboxHeight;
             break;
         case 'bot':
-            xPos = (width() - 450) / 2;
-            yPos = height() - 20;
-            startyPos = height() + 50;
+            xPos = (width() - textboxWidth) / 2;
+            yPos = height() - margin;
+            startyPos = height() + baseTextboxHeight;
             break;
         case 'botright':
-            xPos = width() - 470;
-            yPos = height() - 20;
-            startyPos = height() + 50;
+            xPos = width() - textboxWidth - margin;
+            yPos = height() - margin;
+            startyPos = height() + baseTextboxHeight;
             break;
         default:
-            xPos = 20;
-            yPos = 20;
-            startyPos = -50;
+            xPos = margin;
+            yPos = margin;
+            startyPos = -baseTextboxHeight;
     }
 
     const textbox = add([
-        rect(450, 50, { radius: 15 }),
+        rect(textboxWidth, baseTextboxHeight, { radius: borderRadius }),
         pos(xPos, startyPos),
-        opacity(0),
+        opacity((doTween) ? 0 : 1),
         'dialogvn',
     ]);
 
     if (options.sideImage) {
         textbox.add([
             sprite(options.sideImage, {
-                width: 60,
+                width: sideImageSize,
             }),
-            pos(-15, -20),
+            pos(-padding.top, -padding.left),
             opacity(1),
         ]);
     }
 
     const dialog = textbox.add([
-        text(string, {
-            size: 20,
-            letterSpacing: 10,
-            lineSpacing: 10,
-            width: 370,
-        }),
-        color(0,0,0),
-        pos(60, 16),
+        text(string, textOpts),
+        color(textColor),
+        pos(sideImageSize, padding.top + textOffsetX),
         opacity(1),
     ]);
 
     // Adjust textbox for dialog height
-    textbox.height = dialog.height + 30;
+    textbox.height = dialog.height + padding.top + padding.bottom;
+
+    // Next Prompt sprite
+    if (config.showNextPrompt) {
+        const nextPromptSprite = textbox.add([
+            sprite(nextPrompt.image),
+            pos(textboxWidth - padding.right - nextPrompt.size/2, textbox.height - padding.bottom - nextPrompt.size/2),
+            anchor('center'),
+            opacity(1),
+            animate(),
+        ]);
+        nextPromptSprite.animate('scale', [vec2(1.2), vec2(1)], {
+            duration: 0.5,
+            direction: 'ping-pong',
+        });
+    }
 
     // Multiplier to offset yPos for text height
     let mult = 0;
@@ -385,52 +430,57 @@ function pop(string, options = {}) {
         mult = 0.5;
     }
 
-    // Tween position and opacity
-    tween(textbox.pos.y, yPos - textbox.height * mult, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
-    tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
+    if (doTween) {
+        // Tween position and opacity
+        tween(textbox.pos.y, yPos - textbox.height * mult, 0.5, (y) => textbox.pos.y = y, easings.easeOutQuad);
+        tween(textbox.opacity, 1, 0.5, (v) => textbox.opacity = v, easings.easeOutQuad);
+    } else {
+        textbox.pos.y = yPos - textbox.height * mult;
+    }
 }
 
 function vn(string, options = {}) {
+    // Textbox options
     const margin = options.margin || 20;
-    const sideImageSize = options.sideImageSize || 120;
-    const sideImageOffset = (options.sideImage) ? margin + sideImageSize : 0;
-    const borderRadius = options.borderRadius || 15;
-    const textColor = options.textColor || [0,0,0];
-    const textOffsetX = options.textOffsetX || 1;
-    const doTween = options.doTween || true;
-
-    const padding = {
+    const padding = Object.assign({
         top: 15,
         right: 20,
         bottom: 15,
         left: 20,
-    }
-    Object.assign(padding, options.padding);
+    }, options.padding);
+    const borderRadius = options.borderRadius || 15;
 
-    const nextPrompt = {
+    // Side image options
+    const sideImageSize = options.sideImageSize || 120;
+    const sideImageOffset = (options.sideImage) ? margin + sideImageSize : 0;
+
+    // Next prompt options
+    const nextPrompt = Object.assign({
         image: 'right-arrow',
         size: 20,
         // TODO: What if the image is not of the same size as the text?
         // TODO: What if the user wants a different padding for the nextPrompt?
         // TODO: What if the user wants to align the nextPrompt to the top or center of the textbox ?
-    }
-    Object.assign(nextPrompt, options.nextPrompt);
+    }, options.nextPrompt);
 
-    const textOpts = {
+    // Text options
+    const textColor = options.textColor || [0,0,0];
+    const textOffsetX = options.textOffsetX || 1;
+    const textOpts = Object.assign({
         size: 20,
         letterSpacing: 10,
         lineSpacing: 10,
         width: width() - 2 * margin - padding.left - padding.right - sideImageOffset - nextPrompt.size - padding.right,
-    }
-    Object.assign(textOpts, options.text);
+    }, options.text);
+    const baseTextboxHeight = textOpts.size + padding.top + padding.bottom;
 
-    console.log(textOpts.width)
+    // Tween options
+    const doTween = options.doTween || true;
 
-    const textboxHeight = textOpts.size + padding.top + padding.bottom;
-
+    // Add objects to the scene
     const textbox = add([
-        rect(width() - 2 * margin - sideImageOffset, textboxHeight, { radius: borderRadius }),
-        pos(sideImageOffset + margin, (doTween) ? height() + textboxHeight : height() - margin - textboxHeight),
+        rect(width() - 2 * margin - sideImageOffset, baseTextboxHeight, { radius: borderRadius }),
+        pos(sideImageOffset + margin, (doTween) ? height() + baseTextboxHeight : height() - margin - baseTextboxHeight),
         opacity((doTween) ? 0 : 1),
         'dialogvn',
     ]);
@@ -441,7 +491,7 @@ function vn(string, options = {}) {
             sprite(options.sideImage, {
                 width: sideImageSize,
             }),
-            pos(-sideImageSize - margin, -sideImageSize + textboxHeight),
+            pos(-sideImageSize - margin, -sideImageSize + baseTextboxHeight),
             opacity(1),
         ]);
     }
@@ -457,6 +507,7 @@ function vn(string, options = {}) {
     textbox.height = dialogText.height + padding.top + padding.bottom;
     if (options.sideImage) sideSprite.pos.y = - sideImageSize + textbox.height;
 
+    // Next Prompt sprite
     if (config.showNextPrompt) {
         const nextPromptSprite = textbox.add([
             sprite(nextPrompt.image),
