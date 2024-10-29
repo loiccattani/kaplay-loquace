@@ -358,6 +358,7 @@ function displayDialog(dialogObject) {
 
 function clear() {
     get('dialogvn').forEach(o => {
+        if (o.is('persistent')) return;
         tween(o.opacity, 0, 0.5, (v) => {
             o.opacity = v;
             o.children.forEach(c => c.opacity = v);
@@ -428,10 +429,13 @@ function pop(string, options = {}) {
 
     const textBoxObj = add([
         rect(conf.textBox.width, baseTextboxHeight, conf.textBox.options),
+        color((conf.textBox.color) ? Object.values(conf.textBox.color) : WHITE),
         pos(xPos, startyPos),
         opacity((conf.doTween) ? 0 : 1),
         'dialogvn',
     ]);
+
+    if (conf.persistent) textBoxObj.use('persistent');
 
     if (conf.sideImage.name) {
         textBoxObj.add([
@@ -495,6 +499,7 @@ function vn(string, options = {}) {
     // Add objects to the scene
     const textBoxObj = add([
         rect(width() - 2 * conf.textBox.margin - sideImageOffset, baseTextboxHeight, conf.textBox.options),
+        color((conf.textBox.color) ? Object.values(conf.textBox.color) : WHITE),
         pos(
             sideImageOffset + conf.textBox.margin,
             (conf.doTween) ? height() + baseTextboxHeight : height() - conf.textBox.margin - baseTextboxHeight
@@ -502,6 +507,8 @@ function vn(string, options = {}) {
         opacity((conf.doTween) ? 0 : 1),
         'dialogvn',
     ]);
+
+    if (conf.persistent) textBoxObj.use('persistent');
 
     let sideImageObj;
     if (conf.sideImage.name) {
