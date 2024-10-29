@@ -1,5 +1,7 @@
 // loquace.js: A Visual Novel and Interactive Fiction dialog system for KAPLAY
 
+import { deepMerge } from '../utils';
+
 // This plugin allows you to create visual novel dialogues in your games.
 // Designed for developers familiar with Ren'Py or Monogatari
 // Usable as both a KAPLAY plugin and an ES6 module
@@ -48,6 +50,82 @@ let statementCounter = 0;
 // Default configuration
 const config = {
     showNextPrompt: true,
+
+    // Default values for pop dialog
+    pop: {
+        position: 'topleft',
+        sideImage: {
+            options: { // For the sprite object
+                width: 60,
+            }
+        },
+        textBox: {
+            width: 450,
+            margin: 20, // FIXME: Should this also be an object with top, right, bottom, left ?
+            padding: {
+                top: 15,
+                right: 20,
+                bottom: 15,
+                left: 20,
+            },
+            options: { // For the rect object
+                radius: 15,
+            }
+        },
+        dialogText: {
+            offsetX: 1,
+            options: { // For the text object
+                size: 20,
+                letterSpacing: 10,
+                lineSpacing: 10,
+                width: 350,
+            }
+        },
+        nextPrompt: {
+            name: 'right-arrow',
+            options: {
+                width: 20,
+            }
+        },
+        doTween: true,
+    },
+
+    // Default values for vn dialog
+    vn: {
+        sideImage: {
+            options: { // For the sprite object
+                width: 120,
+            }
+        },
+        textBox: {
+            margin: 20, // FIXME: Should this also be an object with top, right, bottom, left ?
+            padding: {
+                top: 15,
+                right: 20,
+                bottom: 15,
+                left: 20,
+            },
+            options: { // For the rect object
+                radius: 15,
+            }
+        },
+        dialogText: {
+            offsetX: 1,
+            options: { // For the text object
+                size: 20,
+                letterSpacing: 10,
+                lineSpacing: 10,
+                // width: Calculated dynamically for full width
+            }
+        },
+        nextPrompt: {
+            name: 'right-arrow',
+            options: {
+                width: 20,
+            }
+        },
+        doTween: true,
+    }
 };
 
 const registeredCommands = {
@@ -263,18 +341,18 @@ function displayDialog(dialogObject) {
     switch (_characters[dialogObject.who].dialogType) {
         case 'vn':
             // Traditional visual novel dialog box at the bottom of the screen
-            vn(dialogObject.statement, {
+            vn(dialogObject.statement, deepMerge(config.vn, {
                 name: _characters[dialogObject.who].name,
                 sideImage: { name: dialogObject.sideImage },
-            });
+            }, _characters[dialogObject.who].dialogOptions || {}));
             break;
         default:
             // Positionable dialog pop-up or pop-down
-            pop(dialogObject.statement, {
+            pop(dialogObject.statement, deepMerge(config.pop, {
                 name: _characters[dialogObject.who].name,
                 position: _characters[dialogObject.who].position,
                 sideImage: { name: dialogObject.sideImage },
-            });
+            }, _characters[dialogObject.who].dialogOptions || {}));
     }
 }
 
@@ -288,177 +366,96 @@ function clear() {
 }
 
 function pop(string, options = {}) {
-    /* options structure example:
-    {
-        name: 'characterName',
-        position: 'topleft',
-        sideImage: {
-            name: 'sideImageName',
-            options: { // For the sprite object
-                width: 60,
-            }
-        },
-        textBox: {
-            width: 450,
-            margin: 20,
-            padding: {
-                top: 15,
-                right: 20,
-                bottom: 15,
-                left: 20,
-            },
-            options: { // For the rect object
-                radius: 15,
-            }
-        },
-        dialogText: {
-            color: [0,0,0],
-            offsetX: 1,
-            options: { // For the text object
-                size: 20,
-                letterSpacing: 10,
-                lineSpacing: 10,
-                width: 350,
-            }
-        },
-        doTween: true,
-    }
-    */
-
-    // Position default
-    const position = options.position || 'topleft';
-
-    // Textbox defaults
-    const textBox = Object.assign({
-        width: 450,
-        margin: 20, // FIXME: Should this also be an object with top, right, bottom, left ?
-    }, options.textBox);
-    textBox.padding = Object.assign({
-        top: 15,
-        right: 20,
-        bottom: 15,
-        left: 20,
-    }, options.textBox?.padding);
-    textBox.options = Object.assign({
-        radius: 15,
-    }, options.textBox?.options);
-
-    // Side image defaults
-    const sideImage = Object.assign({}, options.sideImage);
-    sideImage.options = Object.assign({
-        width: 60,
-    }, options.sideImage?.options);
-
-    // Next prompt defaults
-    const nextPrompt = Object.assign({
-        name: 'right-arrow',
-    }, options.nextPrompt);
-    nextPrompt.options = Object.assign({
-        width: 20,
-    }, options.nextPrompt?.options);
-
-    // Text options
-    const dialogText = Object.assign({
-        color: [0,0,0],
-        offsetX: 1,
-    }, options.dialogText);
-    dialogText.options = Object.assign({
-        size: 20,
-        letterSpacing: 10,
-        lineSpacing: 10,
-        width: textBox.width - sideImage.options.width - textBox.padding.right - ((config.showNextPrompt) ? nextPrompt.options.width + textBox.padding.right : 0),
-    }, options.dialogText?.options);
+    // Deep merge options with default config
+    const conf = deepMerge(config.pop, options);
 
     // Calculate base textBox height (will be adjusted for dialog height later)
-    const baseTextboxHeight = dialogText.options.size + textBox.padding.top + textBox.padding.bottom;
-
-    // Tween options
-    const doTween = options.doTween || true;
+    const baseTextboxHeight = conf.dialogText.options.size + conf.textBox.padding.top + conf.textBox.padding.bottom;
 
     let xPos, yPos, startyPos;
 
-    switch (position) {
+    switch (conf.position) {
         case 'topleft':
-            xPos = textBox.margin;
-            yPos = textBox.margin;
+            xPos = conf.textBox.margin;
+            yPos = conf.textBox.margin;
             startyPos = -baseTextboxHeight;
             break;
         case 'top':
-            xPos = (width() - textBox.width) / 2;
-            yPos = textBox.margin;
+            xPos = (width() - conf.textBox.width) / 2;
+            yPos = conf.textBox.margin;
             startyPos = -baseTextboxHeight;
             break;
         case 'topright':
-            xPos = width() - textBox.width - textBox.margin;
-            yPos = textBox.margin;
+            xPos = width() - conf.textBox.width - conf.textBox.margin;
+            yPos = conf.textBox.margin;
             startyPos = -baseTextboxHeight;
             break;
         case 'left':
-            xPos = textBox.margin;
+            xPos = conf.textBox.margin;
             yPos = height() / 2;
             startyPos = yPos;
             break;
         case 'center':
-            xPos = (width() - textBox.width) / 2;
+            xPos = (width() - conf.textBox.width) / 2;
             yPos = height() / 2;
             startyPos = yPos;
             break;
         case 'right':
-            xPos = width() - textBox.width - textBox.margin;
+            xPos = width() - conf.textBox.width - conf.textBox.margin;
             yPos = height() / 2;
             startyPos = yPos;
             break;
         case 'botleft':
-            xPos = textBox.margin;
-            yPos = height() - textBox.margin;
+            xPos = conf.textBox.margin;
+            yPos = height() - conf.textBox.margin;
             startyPos = height() + baseTextboxHeight;
             break;
         case 'bot':
-            xPos = (width() - textBox.width) / 2;
-            yPos = height() - textBox.margin;
+            xPos = (width() - conf.textBox.width) / 2;
+            yPos = height() - conf.textBox.margin;
             startyPos = height() + baseTextboxHeight;
             break;
         case 'botright':
-            xPos = width() - textBox.width - textBox.margin;
-            yPos = height() - textBox.margin;
+            xPos = width() - conf.textBox.width - conf.textBox.margin;
+            yPos = height() - conf.textBox.margin;
             startyPos = height() + baseTextboxHeight;
             break;
         default:
-            xPos = textBox.margin;
-            yPos = textBox.margin;
+            xPos = conf.textBox.margin;
+            yPos = conf.textBox.margin;
             startyPos = -baseTextboxHeight;
     }
 
     const textBoxObj = add([
-        rect(textBox.width, baseTextboxHeight, textBox.options),
+        rect(conf.textBox.width, baseTextboxHeight, conf.textBox.options),
         pos(xPos, startyPos),
-        opacity((doTween) ? 0 : 1),
+        opacity((conf.doTween) ? 0 : 1),
         'dialogvn',
     ]);
 
-    if (sideImage) {
+    if (conf.sideImage.name) {
         textBoxObj.add([
-            sprite(sideImage.name, sideImage.options),
-            pos(-textBox.padding.top, -textBox.padding.left),
+            sprite(conf.sideImage.name, conf.sideImage.options),
+            pos(-conf.textBox.padding.top, -conf.textBox.padding.left),
             opacity(1),
         ]);
     }
 
     const textObj = textBoxObj.add([
-        text(string, dialogText.options),
-        color(dialogText.color),
-        pos(sideImage.options.width, textBox.padding.top + dialogText.offsetX),
+        text(string, conf.dialogText.options),
+        color((conf.dialogText.color) ? Object.values(conf.dialogText.color) : BLACK),
+        pos((conf.sideImage.name) ? conf.sideImage.options.width : conf.textBox.padding.left, conf.textBox.padding.top + conf.dialogText.offsetX),
         opacity(1),
     ]);
 
     // Adjust textBoxObj for dialog height
-    textBoxObj.height = textObj.height + textBox.padding.top + textBox.padding.bottom;
+    textBoxObj.height = textObj.height + conf.textBox.padding.top + conf.textBox.padding.bottom;
 
     // Next Prompt sprite
     if (config.showNextPrompt) {
         const nextPromptSprite = textBoxObj.add([
-            sprite(nextPrompt.name, nextPrompt.options),
-            pos(textBox.width - textBox.padding.right - nextPrompt.options.width/2, textBoxObj.height - textBox.padding.bottom - nextPrompt.options.width/2),
+            sprite(conf.nextPrompt.name, conf.nextPrompt.options),
+            pos(conf.textBox.width - conf.textBox.padding.right - conf.nextPrompt.options.width/2, textBoxObj.height - conf.textBox.padding.bottom - conf.nextPrompt.options.width/2),
             anchor('center'),
             opacity(1),
             animate(),
@@ -471,13 +468,13 @@ function pop(string, options = {}) {
 
     // Multiplier to offset yPos for text height
     let mult = 0;
-    if (position.includes('bot')) {
+    if (conf.position.includes('bot')) {
         mult = 1;
-    } else if (position === 'left' || position === 'center' || position === 'right') {
+    } else if (conf.position === 'left' || conf.position === 'center' || conf.position === 'right') {
         mult = 0.5;
     }
 
-    if (doTween) {
+    if (conf.doTween) {
         // Tween position and opacity
         tween(textBoxObj.pos.y, yPos - textBoxObj.height * mult, 0.5, (y) => textBoxObj.pos.y = y, easings.easeOutQuad);
         tween(textBoxObj.opacity, 1, 0.5, (v) => textBoxObj.opacity = v, easings.easeOutQuad);
@@ -489,124 +486,50 @@ function pop(string, options = {}) {
 }
 
 function vn(string, options = {}) {
-    /* options structure example:
-    {
-        name: 'characterName',
-        sideImage: {
-            name: 'sideImageName',
-            options: { // For the sprite object
-                width: 120,
-            }
-        },
-        textBox: {
-            margin: 20,
-            padding: {
-                top: 15,
-                right: 20,
-                bottom: 15,
-                left: 20,
-            },
-            options: { // For the rect object
-                radius: 15,
-            }
-        },
-        dialogText: {
-            color: [0,0,0],
-            offsetX: 1,
-            options: { // For the text object
-                size: 20,
-                letterSpacing: 10,
-                lineSpacing: 10,
-                width: 350, // Calculated for full width by default
-            }
-        },
-        doTween: true,
-    }
-    */
+    // Deep merge options with default config
+    const conf = deepMerge(config.vn, options);
 
-    // TextBox defaults
-    const textBox = Object.assign({
-        margin: 20, // FIXME: Should this also be an object with top, right, bottom, left ?
-    }, options.textBox);
-    textBox.padding = Object.assign({
-        top: 15,
-        right: 20,
-        bottom: 15,
-        left: 20,
-    }, options.textBox?.padding);
-    textBox.options = Object.assign({
-        radius: 15,
-    }, options.textBox?.options);
-
-    // Side image defaults
-    const sideImage = Object.assign({}, options.sideImage);
-    sideImage.options = Object.assign({
-        width: 120,
-    }, options.sideImage?.options);
-    const sideImageOffset = (options.sideImage) ? textBox.margin + sideImage.options.width : 0;
-
-    // Next prompt defaults
-    const nextPrompt = Object.assign({
-        name: 'right-arrow',
-    }, options.nextPrompt);
-    nextPrompt.options = Object.assign({
-        width: 20,
-    }, options.nextPrompt?.options);
-
-    // Text defaults
-    const dialogText = Object.assign({
-        offsetX: 1,
-        color: [0,0,0],
-    });
-    dialogText.options = Object.assign({
-        size: 20,
-        letterSpacing: 10,
-        lineSpacing: 10,
-        width: width() - 2 * textBox.margin - textBox.padding.left - textBox.padding.right - sideImageOffset - ((config.showNextPrompt) ? nextPrompt.options.width + textBox.padding.right : 0),
-    }, options.dialogText?.options);
-    const baseTextboxHeight = dialogText.options.size + textBox.padding.top + textBox.padding.bottom;
-
-    // Tween options
-    const doTween = options.doTween || true;
+    const sideImageOffset = (options.sideImage) ? conf.textBox.margin + conf.sideImage.options.width : 0;
+    const baseTextboxHeight = conf.dialogText.options.size + conf.textBox.padding.top + conf.textBox.padding.bottom;
 
     // Add objects to the scene
     const textBoxObj = add([
-        rect(width() - 2 * textBox.margin - sideImageOffset, baseTextboxHeight, textBox.options),
+        rect(width() - 2 * conf.textBox.margin - sideImageOffset, baseTextboxHeight, conf.textBox.options),
         pos(
-            sideImageOffset + textBox.margin,
-            (doTween) ? height() + baseTextboxHeight : height() - textBox.margin - baseTextboxHeight
+            sideImageOffset + conf.textBox.margin,
+            (conf.doTween) ? height() + baseTextboxHeight : height() - conf.textBox.margin - baseTextboxHeight
         ),
-        opacity((doTween) ? 0 : 1),
+        opacity((conf.doTween) ? 0 : 1),
         'dialogvn',
     ]);
 
     let sideImageObj;
-    if (sideImage) {
+    if (conf.sideImage.name) {
         sideImageObj = textBoxObj.add([
-            sprite(sideImage.name, sideImage.options),
-            pos(-sideImage.options.width - textBox.margin, -sideImage.options.width + baseTextboxHeight),
+            sprite(conf.sideImage.name, conf.sideImage.options),
+            pos(-conf.sideImage.options.width - conf.textBox.margin, -conf.sideImage.options.width + baseTextboxHeight),
             opacity(1),
         ]);
     }
 
     const textObj = textBoxObj.add([
-        text(string, dialogText.options),
-        color(dialogText.color),
-        pos(textBox.padding.left, textBox.padding.top + dialogText.offsetX),
+        text(string, conf.dialogText.options),
+        color((conf.dialogText.color) ? Object.values(conf.dialogText.color) : BLACK),
+        pos(conf.textBox.padding.left, conf.textBox.padding.top + conf.dialogText.offsetX),
         opacity(1),
     ]);
 
     // Adjust textbox for textObj height
-    textBoxObj.height = textObj.height + textBox.padding.top + textBox.padding.bottom;
-    if (sideImage) sideImageObj.pos.y = - sideImage.options.width + textBoxObj.height;
+    textBoxObj.height = textObj.height + conf.textBox.padding.top + conf.textBox.padding.bottom;
+    if (conf.sideImage.name) sideImageObj.pos.y = - conf.sideImage.options.width + textBoxObj.height;
 
     // Next Prompt sprite
     if (config.showNextPrompt) {
         const nextPromptSprite = textBoxObj.add([
-            sprite(nextPrompt.name, nextPrompt.options),
+            sprite(conf.nextPrompt.name, conf.nextPrompt.options),
             pos(
-                width() - 2 * textBox.margin - sideImageOffset - textBox.padding.right - nextPrompt.options.width/2,
-                textBoxObj.height - textBox.padding.bottom - nextPrompt.options.width/2
+                width() - 2 * conf.textBox.margin - sideImageOffset - conf.textBox.padding.right - conf.nextPrompt.options.width/2,
+                textBoxObj.height - conf.textBox.padding.bottom - conf.nextPrompt.options.width/2
             ),
             anchor('center'),
             opacity(1),
@@ -618,13 +541,13 @@ function vn(string, options = {}) {
         });
     }
 
-    if (doTween) {
+    if (conf.doTween) {
         // Tween position and opacity
-        tween(textBoxObj.pos.y, height() - textBox.margin - textBoxObj.height, 0.5, (y) => textBoxObj.pos.y = y, easings.easeOutQuad);
+        tween(textBoxObj.pos.y, height() - conf.textBox.margin - textBoxObj.height, 0.5, (y) => textBoxObj.pos.y = y, easings.easeOutQuad);
         tween(textBoxObj.opacity, 1, 0.5, (v) => textBoxObj.opacity = v, easings.easeOutQuad);
     } else {
-        textBoxObj.pos.y = height() - textBox.margin - textBoxObj.height;
+        textBoxObj.pos.y = height() - conf.textBox.margin - textBoxObj.height;
     }
 
-    return textBox; // Allow for further manipulation and/or custom tweening
+    return textBoxObj; // Allow for further manipulation and/or custom tweening
 }
