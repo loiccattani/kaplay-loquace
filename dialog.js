@@ -70,7 +70,7 @@ const config = {
             },
             options: { // For the rect object
                 radius: 15,
-            }
+            },
         },
         dialogText: {
             offsetX: 1,
@@ -85,7 +85,7 @@ const config = {
             name: 'right-arrow',
             options: {
                 width: 20,
-            }
+            },
         },
         doTween: true,
     },
@@ -95,7 +95,7 @@ const config = {
         sideImage: {
             options: { // For the sprite object
                 width: 120,
-            }
+            },
         },
         textBox: {
             margin: 20, // FIXME: Should this also be an object with top, right, bottom, left ?
@@ -107,7 +107,7 @@ const config = {
             },
             options: { // For the rect object
                 radius: 15,
-            }
+            },
         },
         dialogText: {
             offsetX: 1,
@@ -116,16 +116,16 @@ const config = {
                 letterSpacing: 10,
                 lineSpacing: 10,
                 // width: Calculated dynamically for full width
-            }
+            },
         },
         nextPrompt: {
             name: 'right-arrow',
             options: {
                 width: 20,
-            }
+            },
         },
         doTween: true,
-    }
+    },
 };
 
 const registeredCommands = {
@@ -452,7 +452,7 @@ function pop(string, options = {}) {
     textBoxObj.height = textObj.height + conf.textBox.padding.top + conf.textBox.padding.bottom;
 
     // Next Prompt sprite
-    if (config.showNextPrompt) {
+    if ((conf.showNextPrompt !== undefined) ? conf.showNextPrompt : config.showNextPrompt) {
         const nextPromptSprite = textBoxObj.add([
             sprite(conf.nextPrompt.name, conf.nextPrompt.options),
             pos(conf.textBox.width - conf.textBox.padding.right - conf.nextPrompt.options.width/2, textBoxObj.height - conf.textBox.padding.bottom - conf.nextPrompt.options.width/2),
@@ -524,7 +524,7 @@ function vn(string, options = {}) {
     if (conf.sideImage.name) sideImageObj.pos.y = - conf.sideImage.options.width + textBoxObj.height;
 
     // Next Prompt sprite
-    if (config.showNextPrompt) {
+    if ((conf.showNextPrompt !== undefined) ? conf.showNextPrompt : config.showNextPrompt) {
         const nextPromptSprite = textBoxObj.add([
             sprite(conf.nextPrompt.name, conf.nextPrompt.options),
             pos(
