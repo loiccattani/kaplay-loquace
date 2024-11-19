@@ -4,12 +4,12 @@ import { deepMerge } from '../utils';
 
 // This plugin allows you to create visual novel dialogues in your games.
 // Designed for developers familiar with Ren'Py or Monogatari
-// Usable as both a KAPLAY plugin and an ES6 module
+// Usable both as a KAPLAY plugin or as an ES6 module
 
 export {
-    dialog, // KAPLAY plugin
+    loquace, // KAPLAY plugin
 
-    // Dialog functions for use as a module
+    // Exported functions for use as a module
     config,
     init,
     characters,
@@ -23,10 +23,10 @@ export {
     vn,
 }
 
-// Allow use of dialog as a KAPLAY plugin
-function dialog() {
+// Allow use of loquace as a KAPLAY plugin
+function loquace() {
     return {
-        dialog: {
+        loquace: {
             config,
             init,
             characters,
@@ -357,7 +357,7 @@ function displayDialog(dialogObject) {
 }
 
 function clear() {
-    get('dialogvn').forEach(o => {
+    get('loquaceDialog').forEach(o => {
         if (o.is('persistent')) return;
         tween(o.opacity, 0, 0.5, (v) => {
             o.opacity = v;
@@ -432,7 +432,7 @@ function pop(string, options = {}) {
         color((conf.textBox.color) ? Object.values(conf.textBox.color) : WHITE),
         pos(xPos, startyPos),
         opacity((conf.doTween) ? 0 : 1),
-        'dialogvn',
+        'loquaceDialog',
     ]);
 
     if (conf.persistent) textBoxObj.use('persistent');
@@ -505,7 +505,7 @@ function vn(string, options = {}) {
             (conf.doTween) ? height() + baseTextboxHeight : height() - conf.textBox.margin - baseTextboxHeight
         ),
         opacity((conf.doTween) ? 0 : 1),
-        'dialogvn',
+        'loquaceDialog',
     ]);
 
     if (conf.persistent) textBoxObj.use('persistent');
