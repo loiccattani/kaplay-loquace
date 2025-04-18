@@ -440,7 +440,7 @@ function pop(string, options = {}) {
         'loquaceDialog',
     ]);
 
-    if (conf.persistent) textBoxObj.use('persistent');
+    if (conf.persistent) textBoxObj.tag('persistent');
 
     if (conf.sideImage.name) {
         textBoxObj.add([
@@ -513,7 +513,7 @@ function vn(string, options = {}) {
         'loquaceDialog',
     ]);
 
-    if (conf.persistent) textBoxObj.use('persistent');
+    if (conf.persistent) textBoxObj.tag('persistent');
 
     let sideImageObj;
     if (conf.sideImage.name) {
