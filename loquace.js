@@ -519,6 +519,9 @@ function vn(string, options = {}) {
         ]);
     }
 
+    // Calculate the width of the text box
+    conf.dialogText.options.width = textBoxObj.width - conf.textBox.padding.left - 2 * conf.textBox.padding.right - conf.nextPrompt.options.width;
+
     const textObj = textBoxObj.add([
         text(string, conf.dialogText.options),
         color((conf.dialogText.color) ? Object.values(conf.dialogText.color) : BLACK),
