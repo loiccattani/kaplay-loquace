@@ -111,7 +111,7 @@ const config = {
             offsetX: 1,
             options: { // For the text object
                 size: 20,
-                letterSpacing: 10,
+                letterSpacing: 0,
                 lineSpacing: 10,
                 // width: Calculated dynamically for full width
             },
