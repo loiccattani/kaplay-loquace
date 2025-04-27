@@ -5,7 +5,7 @@
 // Usable both as a KAPLAY plugin or as an ES6 module
 
 export {
-  loquacePlugin as default, // KAPLAY plugin
+  loquacePlugin, // KAPLAY plugin
 
   // Exported functions for use as a module
   config,

@@ -1,5 +1,5 @@
 import kaplay from "kaplay";
-import loquacePlugin from "/src/loquace.js";
+import { loquacePlugin } from "/src/loquace.js";
 
 kaplay({
   // styling

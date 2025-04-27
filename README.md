@@ -50,7 +50,7 @@ TBD
 ### Usage
 ```js
   import kaplay from "kaplay";
-  import loquacePlugin from "/src/loquace.js";
+  import { loquacePlugin } from "/src/loquace.js";
 
   const k = kaplay({
     plugins: [loquacePlugin],
@@ -248,8 +248,6 @@ For a complete list of options, look into the definition of `config` in loquace 
 
 - In your main.js, import and use Loquace as described in [Usage](#usage)
 - In other modules, import loquace with `import * as loquace from "/src/loquace.js";`
-
-It's even possible to do both with `import loquacePlugin, * as loquace from "/src/loquace.js";`, in the eventuality of a small single-file project should KAPLAY global be disabled.
 
 ## Roadmap
 
