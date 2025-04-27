@@ -140,7 +140,7 @@ Launch demo code with `npm run dev`
 
 #### Basics and terminology
 
-Loquace is implemented in a way to be familiar with Ren'Py or Monogatari user
+Loquace is implemented in a way to be familiar with Ren'Py or Monogatari users.
 
 Terminology:
 - statement: a dialog line (can include commands, a character key and expression)
@@ -164,6 +164,8 @@ Let's quickly describe what is at the core of loquace, the statement
   - `disableNextPrompt Quick ! do something !` Built-in, disable showing the next prompt arrow sprite
 
 A statement can include one or more commands, a character key along with an optional expression, and at minimum a dialog string.
+
+Random statements : A statement can also be an array of statements. If so, one of those statement will be chosen randomly.
 
 #### Characters
 

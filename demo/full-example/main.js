@@ -65,7 +65,7 @@ scene("main", () => {
       "disableNextPrompt sayHi r I can say hi from the console too!",
     ],
     'finish': [
-      "r Loquace is awesome!",
+      ["r Loquace is awesome!", "r Loquace FTW!"], // Use an array to choose a random statement
     ],
   });
 
