@@ -1,0 +1,32 @@
+{
+  "name": "kaplay-loquace",
+  "version": "0.1.0-alpha",
+  "type": "module",
+  "description": "A Visual Novel and Interactive Fiction dialog system for KAPLAY",
+  "main": "./dist/kaplay-loquace.umd.cjs",
+  "module": "./dist/kaplay-loquace.js",
+  "exports": {
+    ".": {
+      "import": "./dist/kaplay-loquace.js",
+      "require": "./dist/kaplay-loquace.umd.cjs"
+    }
+  },
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "keywords": [],
+  "author": "Loïc Cattani <loic@cattani.co>",
+  "license": "MIT",
+  "dependencies": {
+    "kaplay": "^3001.0.12"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7"
+  }
+}
