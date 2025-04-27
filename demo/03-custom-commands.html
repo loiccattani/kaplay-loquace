@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loquace - Custom Commands</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import kaplay from "kaplay";
+      import loquacePlugin from "/src/loquace.js";
+
+      const k = kaplay({
+        buttons: {
+          space: {
+            keyboard: ["space"],
+          },
+        },
+        plugins: [loquacePlugin],
+      });
+
+      // Required
+      loquace.init();
+
+      // Define a key to dismiss/continue the dialog
+      onButtonPress("space", loquace.next);
+
+      // Define characters (name, position, dialog type)
+      loquace.characters({
+        r: {
+          name: "Robot",
+        },
+        t: {
+          name: "Tom",
+          dialogType: "vn",
+        },
+      });
+
+      loquace.registerCommand('sayHi', sayHi)
+
+      function sayHi() {
+        console.log("Hello from the console!");
+      }
+
+      // Load a script to be used immediately when passing an array
+      loquace.script([
+        "r Hello, I am a robot.",
+        "sayHi r I can also say hi from the console!",
+      ]);
+    </script>
+  </body>
+</html>

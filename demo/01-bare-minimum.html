@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loquace - Bare Minimum Demo</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import kaplay from "kaplay";
+      import loquacePlugin from "/src/loquace.js";
+
+      const k = kaplay({
+        buttons: {
+          space: {
+            keyboard: ["space"],
+          },
+        },
+        plugins: [loquacePlugin], // add Loquace plugin here
+      });
+
+      // Required
+      loquace.init();
+      // `loquace` is globally available by default,
+      // from KAPLAY's `global` option (https://kaplayjs.com/doc/KAPLAYOpt/)
+
+      // Define a key to dismiss/continue the dialog
+      onButtonPress("space", loquace.next);
+
+      // Load a script to be used immediately when passing an array
+      loquace.script([
+        "Hello world from KAPLAY Loquace",
+        "This is a narrator dialog",
+      ]);
+    </script>
+  </body>
+</html>

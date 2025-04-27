@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loquace - Direct dialog</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import kaplay from "kaplay";
+      import loquacePlugin from "/src/loquace.js";
+
+      const k = kaplay({
+        // styling
+        buttons: {
+          space: {
+            keyboard: ["space"],
+          },
+        },
+        plugins: [loquacePlugin],
+      });
+
+      // Initialize loquace with no automatic next prompt sprite
+      loquace.init({
+        showNextPrompt: false,
+        // ...other dialog options (pop, vn)
+      });
+
+      // Define a key to clear loquace dialogs
+      onButtonPress("space", loquace.clear);
+
+      // Directly call the dialog function
+      loquace.pop("Hello world", {
+        // ...options
+      });
+    </script>
+  </body>
+</html>

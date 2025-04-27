@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loquace - Characters</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import kaplay from "kaplay";
+      import loquacePlugin from "/src/loquace.js";
+
+      const k = kaplay({
+        buttons: {
+          space: {
+            keyboard: ["space"],
+          },
+        },
+        plugins: [loquacePlugin],
+      });
+
+      // Required
+      loquace.init();
+
+      // Define a key to dismiss/continue the dialog
+      onButtonPress("space", loquace.next);
+
+      // Define characters (name, position, dialog type)
+      loquace.characters({
+        r: { // Character key 'r' (for Robot), will be used in the script to identify the character
+          name: "Robot",
+          // dialogType: 'pop', // default
+          // position: "topleft", // default for 'pop' type
+        },
+        t: {
+          name: "Tom",
+          dialogType: "vn",
+        },
+      });
+
+      // Load a script to be used immediately when passing an array
+      loquace.script([
+        "r Hello, I am a robot.",
+        "t Hi, I am Tom.",
+        "Hello, I'm the narrator",
+      ]);
+    </script>
+  </body>
+</html>
